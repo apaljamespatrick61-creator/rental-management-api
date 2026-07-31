@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  full_name  String
+  email     String   @unique
+  password  String
+  refresh_token String? 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("users")
+
+}
+
+model Tenant {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  unit             String
+  phone_number     String
+  lease_start_date DateTime
+  monthly_rent     Decimal  @db.Decimal(10, 2)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+  transactions     Transaction[]
+
+  @@map("tenants")
+}
+
+model Transaction {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id        String?  @db.Uuid
+  tenant           Tenant?  @relation(fields: [tenant_id], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  unit             String
+  amount           Decimal @db.Decimal(10, 2)
+  status           String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  @@index([tenant_id], map: "idx_transactions_tenant_id")
+  @@map("transactions")
+}
+
+model Room {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  room_number      String
+  capacity         Int
+  rent_price       Decimal  @db.Decimal(10, 2)
+  status           String
+  photo_url       String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @default(now()) @updatedAt
+
+  @@map("rooms")
+
+
+}
