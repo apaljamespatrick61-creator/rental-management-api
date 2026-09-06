@@ -18,6 +18,24 @@ const login = async (req, res) => {
     return res.status(400).json({ message: error.message });
   }
 };
+
+const loginAdmin = async (req, res) => {
+  try {
+    const admin = await authService.loginAdmin(req.body);
+    res.cookie("auth_token", admin.accessToken, {
+      httpOnly: true,
+      secure: false, // set to true in production with HTTPS
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.status(200).json({ message: "Admin login successful" });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+
+
 const logout = async (req, res) => {
   res.clearCookie("auth_token", {
     httpOnly: true,
@@ -29,5 +47,6 @@ const logout = async (req, res) => {
 
 module.exports = {
   login,
+  loginAdmin,
   logout,
 };

@@ -1,6 +1,6 @@
-const express = require('express');
-const authController = require('./auth.controller');
-const authValidator = require('./auth.validators');
+const express = require("express");
+const authController = require("./auth.controller");
+const authValidator = require("./auth.validators");
 
 const router = express.Router();
 
@@ -33,7 +33,42 @@ const router = express.Router();
  *       400:
  *         description: Invalid email or password
  */
-router.post('/login', authValidator.validateLogin, authController.login);
+router.post("/login", authValidator.validateLogin, authController.login);
+
+/**
+ * @openapi
+ * /api/auth/admin/login:
+ *   post:
+ *     summary: Log in an admin user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+*             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: admin@example.com
+ *               password:
+ *                 type: string
+ *                 example: secret123
+ *     responses:
+ *       200:
+ *         description: Admin login successful
+ *       400:
+ *         description: Invalid email or password
+ */
+router.post(
+  "/admin/login",
+  authValidator.validateLogin,
+  authController.loginAdmin,
+);
 
 /**
  * @openapi
@@ -46,5 +81,5 @@ router.post('/login', authValidator.validateLogin, authController.login);
  *       200:
  *         description: Logout successful
  */
-router.post('/logout', authController.logout);
+router.post("/logout", authController.logout);
 module.exports = router;

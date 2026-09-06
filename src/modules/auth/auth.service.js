@@ -34,6 +34,38 @@ const loginUser = async ({ email, password }) => {
   };
 };
 
+const loginAdmin = async ({ email, password }) => {
+  const admin = await authRepository.findAdminByEmail(email);
+  if (!admin) {
+    throw new Error("Invalid email or password");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, admin.password);
+  if (!isPasswordValid) {
+    throw new Error("Invalid email or password");
+  }
+
+  const accessToken = jwt.sign(
+    {
+      userId: admin.id,
+      email: admin.email,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+    },
+  );
+  return {
+    id: admin.id,
+    full_name: admin.full_name,
+    email: admin.email,
+    refresh_token: admin.refresh_token,
+    accessToken: accessToken,
+  };
+
+}
+
 module.exports = {
   loginUser,
+  loginAdmin,
 };
