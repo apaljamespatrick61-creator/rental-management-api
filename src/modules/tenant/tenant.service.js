@@ -1,8 +1,38 @@
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { insertTenant, updateTenant: updateTenantRepository, getTenantsPaginated, getTenantById: getTenantByIdRepository, getTenants:getTenantsRepository } = require('./tenant.repository');
 
+const generateTemporaryPassword = () => crypto.randomBytes(8).toString('hex');
+
 const createTenant = async (tenantData) => {
-    const tenant = await insertTenant(tenantData);
-    return tenant;
+    if (!tenantData.email) {
+        const validationError = new Error('Email is required');
+        validationError.statusCode = 400;
+        throw validationError;
+    }
+
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await bcrypt.hash(temporaryPassword, 10);
+
+    try {
+        const tenant = await insertTenant({
+            ...tenantData,
+            passwordHash,
+        });
+
+        return {
+            ...tenant,
+            temporary_password: temporaryPassword,
+        };
+    } catch (error) {
+        if (error.code === '23505') {
+            const duplicateError = new Error('Email is already in use');
+            duplicateError.statusCode = 409;
+            throw duplicateError;
+        }
+
+        throw error;
+    }
 }
 
 const updateTenant = async (tenantId, tenantData) => {
