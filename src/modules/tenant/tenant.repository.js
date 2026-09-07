@@ -8,10 +8,25 @@ const insertTenant  = async (tenantData) => {
 }
 
 const updateTenant = async (tenantId, tenantData) => {
-    const { name, unit, phone_number, lease_start_date, monthly_rent } = tenantData;
-    const query = 'UPDATE tenants SET name = $1, unit = $2, phone_number = $3, lease_start_date = $4, monthly_rent = $5 WHERE id = $6 RETURNING *';
-    const result = await pool.query(query, [name, unit, phone_number, lease_start_date, monthly_rent, tenantId]);
-    return result.rows[0];
+    const { name, unit, phone_number, lease_start_date, monthly_rent,email,passwordHash } = tenantData;
+    const client = await pool.connect();
+    try{
+        await client.query('BEGIN');
+        const insertUserQuery = `INSERT INTO users(full_name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id`;
+        const userResult = await client.query(insertUserQuery, [name, email, passwordHash, 'tenant']);
+        const userId = userResult.rows[0].id;
+
+        const insertTenantQuery = `INSERT INTO tenants (name, unit, phone_number, lease_start_date, monthly_rent, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`;
+        const tenantResult = await client.query(insertTenantQuery, [name, unit, phone_number, lease_start_date, monthly_rent, userId]);
+        const tenant = tenantResult.rows[0];
+        await client.query('COMMIT');
+        return tenant;
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
 }
 
 
