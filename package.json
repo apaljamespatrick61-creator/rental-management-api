@@ -9,7 +9,7 @@
     "lint": "eslint src prisma *.js",
     "lint:fix": "eslint src prisma *.js --fix",
     "prisma:validate": "prisma validate",
-    "security:audit": "yarn audit --level high"
+    "security:audit": "yarn audit --level critical"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
